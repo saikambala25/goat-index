@@ -9,7 +9,6 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        /* Simple Modal */
         .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
         .modal-content { background-color: white; margin: 10% auto; padding: 20px; border-radius: 8px; width: 400px; }
     </style>
@@ -45,7 +44,7 @@
         </nav>
 
         <div class="p-4">
-            <button onclick="alert('Logged Out')" class="w-full flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg">
+            <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg">
                 <i data-lucide="log-out" class="w-5 h-5"></i> Logout
             </button>
         </div>
@@ -57,7 +56,7 @@
         <header class="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center z-10">
             <div>
                 <h1 id="admin-page-title" class="text-2xl font-bold text-gray-800">Dashboard</h1>
-                <p class="text-sm text-gray-500">Wednesday, Dec 3, 2025</p>
+                <p class="text-sm text-gray-500" id="current-date">Wednesday, Dec 3, 2025</p>
             </div>
             <div class="flex items-center gap-6">
                 <button class="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium">
@@ -66,7 +65,7 @@
                 <div class="flex items-center gap-3 border-l pl-6">
                     <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">AU</div>
                     <div>
-                        <p class="text-sm font-semibold">Admin User</p>
+                        <p class="text-sm font-semibold" id="admin-username">Admin User</p>
                         <p class="text-xs text-gray-500">Super Admin</p>
                     </div>
                 </div>
@@ -76,10 +75,9 @@
         <!-- Content Area -->
         <div class="flex-1 overflow-y-auto p-8">
             
-            <!-- 1. DASHBOARD VIEW -->
+            <!-- DASHBOARD VIEW -->
             <div id="admin-view-dashboard" class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <!-- Stat Card 1 -->
                     <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-start justify-between">
                         <div>
                             <p class="text-sm text-gray-500 font-medium">Total Livestock</p>
@@ -89,7 +87,6 @@
                             <i data-lucide="package" class="w-6 h-6"></i>
                         </div>
                     </div>
-                    <!-- Stat Card 2 -->
                     <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-start justify-between">
                         <div>
                             <p class="text-sm text-gray-500 font-medium">Available</p>
@@ -99,8 +96,7 @@
                             <i data-lucide="check-circle" class="w-6 h-6"></i>
                         </div>
                     </div>
-                     <!-- Stat Card 3 -->
-                     <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-start justify-between">
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-start justify-between">
                         <div>
                             <p class="text-sm text-gray-500 font-medium">Total Orders</p>
                             <h3 class="text-3xl font-bold text-gray-800 mt-2" id="stat-orders">0</h3>
@@ -109,11 +105,10 @@
                             <i data-lucide="shopping-bag" class="w-6 h-6"></i>
                         </div>
                     </div>
-                    <!-- Stat Card 4 -->
                     <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-start justify-between">
                         <div>
                             <p class="text-sm text-gray-500 font-medium">Total Revenue</p>
-                            <h3 class="text-3xl font-bold text-gray-800 mt-2" id="stat-revenue">$0</h3>
+                            <h3 class="text-3xl font-bold text-gray-800 mt-2" id="stat-revenue">₹0</h3>
                         </div>
                         <div class="p-3 bg-teal-50 text-teal-600 rounded-lg">
                             <i data-lucide="dollar-sign" class="w-6 h-6"></i>
@@ -136,7 +131,7 @@
                 </div>
             </div>
 
-            <!-- 2. LIVESTOCK MANAGEMENT VIEW -->
+            <!-- LIVESTOCK MANAGEMENT VIEW -->
             <div id="admin-view-livestock" class="hidden space-y-6">
                 <div class="flex justify-between items-center">
                     <div class="relative w-96">
@@ -161,13 +156,12 @@
                             </tr>
                         </thead>
                         <tbody id="livestock-table-body" class="divide-y divide-gray-100 text-sm">
-                            <!-- Populated by JS -->
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- 3. ORDERS VIEW -->
+            <!-- ORDERS VIEW -->
             <div id="admin-view-orders" class="hidden space-y-6">
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                     <table class="w-full text-left">
@@ -182,49 +176,29 @@
                             </tr>
                         </thead>
                         <tbody id="orders-table-body" class="divide-y divide-gray-100 text-sm">
-                            <!-- Populated by JS -->
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- 4. CUSTOMERS VIEW -->
+            <!-- CUSTOMERS VIEW -->
             <div id="admin-view-customers" class="hidden space-y-6">
-                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                     <table class="w-full text-left">
                         <thead class="bg-gray-50 text-gray-500 text-sm uppercase">
                             <tr>
                                 <th class="px-6 py-4 font-medium">Name</th>
                                 <th class="px-6 py-4 font-medium">Email</th>
-                                <th class="px-6 py-4 font-medium">Role</th>
                                 <th class="px-6 py-4 font-medium">Joined</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100 text-sm">
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 font-bold flex items-center gap-2">
-                                    <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs">A</div>
-                                    Admin User
-                                </td>
-                                <td class="px-6 py-4 text-gray-500">admin@livestockmart.com</td>
-                                <td class="px-6 py-4"><span class="bg-black text-white px-2 py-0.5 rounded text-xs">admin</span></td>
-                                <td class="px-6 py-4 text-gray-500">3/12/2025</td>
-                            </tr>
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 font-bold flex items-center gap-2">
-                                    <div class="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">A</div>
-                                    Alex Johnson
-                                </td>
-                                <td class="px-6 py-4 text-gray-500">alex@example.com</td>
-                                <td class="px-6 py-4"><span class="bg-gray-200 text-gray-700 px-2 py-0.5 rounded text-xs">user</span></td>
-                                <td class="px-6 py-4 text-gray-500">3/12/2025</td>
-                            </tr>
+                        <tbody id="customers-table-body" class="divide-y divide-gray-100 text-sm">
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- 5. SETTINGS VIEW -->
+            <!-- SETTINGS VIEW -->
             <div id="admin-view-settings" class="hidden flex items-center justify-center h-full">
                 <div class="text-center text-gray-400">
                     <i data-lucide="settings" class="w-12 h-12 mx-auto mb-4 opacity-50"></i>
@@ -247,7 +221,7 @@
                 </select>
                 <input type="text" id="new-breed" placeholder="Breed (e.g. Alpine)" class="w-full border p-2 rounded" required>
                 <input type="text" id="new-age" placeholder="Age (e.g. 24 months)" class="w-full border p-2 rounded" required>
-                <input type="number" id="new-price" placeholder="Price ($)" class="w-full border p-2 rounded" required>
+                <input type="number" id="new-price" placeholder="Price (₹)" class="w-full border p-2 rounded" required>
                 <div class="flex justify-end gap-2 mt-4">
                     <button type="button" onclick="closeAddModal()" class="px-4 py-2 text-gray-600">Cancel</button>
                     <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Add</button>
@@ -259,26 +233,29 @@
     <script>
         lucide.createIcons();
 
-        // State Variables
+        const API_URL = 'https://goat-user.vercel.app/api';
+
         let livestock = [];
         let orders = [];
+        let customers = [];
 
-        // API URL
-        const API_URL = 'https://goat-snowy.vercel.app/api';
+        function formatINR(amount) {
+            return '₹' + Number(amount || 0).toLocaleString('en-IN');
+        }
 
-        // --- Fetch Data from API ---
         async function loadData() {
             try {
-                // Fetch Livestock
-                const lsRes = await fetch(`${API_URL}/livestock`);
-                livestock = await lsRes.json();
-                
-                // Fetch Orders
-                const ordRes = await fetch(`${API_URL}/orders`);
-                orders = await ordRes.json();
+                const [lsRes, ordRes, custRes] = await Promise.all([
+                    fetch(`${API_URL}/livestock`),
+                    fetch(`${API_URL}/orders`, { credentials: 'include' }),
+                    fetch(`${API_URL}/admin/users`, { credentials: 'include' })
+                ]);
 
-                // Re-render current view
-                const activeView = document.querySelector('.admin-nav-item.bg-green-600').getAttribute('onclick').replace("adminRouter('", "").replace("')", "");
+                livestock = await lsRes.json();
+                orders = await ordRes.json();
+                customers = await custRes.json();
+
+                const activeView = document.querySelector('.admin-nav-item.bg-green-600')?.getAttribute('onclick')?.replace("adminRouter('", "").replace("')", "") || 'dashboard';
                 adminRouter(activeView);
             } catch (error) {
                 console.error("Error loading data:", error);
@@ -287,35 +264,42 @@
         }
 
         function adminRouter(viewName) {
-            const titles = { 'dashboard': 'Dashboard', 'livestock': 'Livestock', 'orders': 'Orders', 'customers': 'Customers', 'settings': 'Settings' };
-            const titleEl = document.getElementById('admin-page-title');
-            if(titleEl) titleEl.innerText = titles[viewName];
+            const titles = {
+                'dashboard': 'Dashboard',
+                'livestock': 'Livestock',
+                'orders': 'Orders',
+                'customers': 'Customers',
+                'settings': 'Settings'
+            };
+            document.getElementById('admin-page-title').innerText = titles[viewName];
 
-            ['dashboard', 'livestock', 'orders', 'customers', 'settings'].forEach(v => document.getElementById(`admin-view-${v}`)?.classList.add('hidden'));
-            document.getElementById(`admin-view-${viewName}`)?.classList.remove('hidden');
+            ['dashboard', 'livestock', 'orders', 'customers', 'settings'].forEach(v => {
+                const el = document.getElementById(`admin-view-${v}`);
+                if (el) el.classList.toggle('hidden', v !== viewName);
+            });
 
             document.querySelectorAll('.admin-nav-item').forEach(btn => {
-                if(btn.getAttribute('onclick').includes(viewName)) {
-                    btn.classList.add('bg-green-600', 'text-white');
-                    btn.classList.remove('text-gray-600', 'hover:bg-green-50');
-                } else {
-                    btn.classList.remove('bg-green-600', 'text-white');
+                const isActive = btn.getAttribute('onclick').includes(`'${viewName}'`);
+                btn.classList.toggle('bg-green-600', isActive);
+                btn.classList.toggle('text-white', isActive);
+                if (!isActive) {
+                    btn.classList.remove('text-white');
                     btn.classList.add('text-gray-600', 'hover:bg-green-50');
                 }
             });
 
-            if(viewName === 'dashboard') renderDashboard();
-            if(viewName === 'livestock') renderLivestockTable();
-            if(viewName === 'orders') renderOrdersTable();
+            if (viewName === 'dashboard') renderDashboard();
+            if (viewName === 'livestock') renderLivestockTable();
+            if (viewName === 'orders') renderOrdersTable();
+            if (viewName === 'customers') renderCustomersTable();
         }
 
         function renderDashboard() {
             document.getElementById('stat-livestock').innerText = livestock.length;
             document.getElementById('stat-available').innerText = livestock.filter(i => i.status === 'Available').length;
             document.getElementById('stat-orders').innerText = orders.length;
-            const revenue = orders.reduce((sum, o) => sum + o.total, 0);
-            document.getElementById('stat-revenue').innerText = '$' + revenue.toLocaleString();
-
+            const revenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+            document.getElementById('stat-revenue').innerText = formatINR(revenue);
             document.getElementById('breakdown-goats').innerText = livestock.filter(i => i.type === 'Goat').length;
             document.getElementById('breakdown-sheep').innerText = livestock.filter(i => i.type === 'Sheep').length;
         }
@@ -324,21 +308,26 @@
             const search = document.getElementById('admin-search-input').value.toLowerCase();
             const tbody = document.getElementById('livestock-table-body');
             const filtered = livestock.filter(i => i.name.toLowerCase().includes(search));
-
-            tbody.innerHTML = filtered.map((item) => `
+            tbody.innerHTML = filtered.map(item => `
                 <tr class="hover:bg-gray-50 border-b">
                     <td class="px-6 py-4 font-medium text-gray-900 flex items-center gap-3">
-                        <span class="text-xl">${item.image}</span>
+                        <span class="text-xl">${item.image || (item.type === 'Goat' ? '🐐' : '🐑')}</span>
                         <div>
                             <div class="font-bold">${item.name}</div>
                             <div class="text-xs text-gray-500">${item.age}</div>
                         </div>
                     </td>
-                    <td class="px-6 py-4"><span class="${item.type==='Goat'?'bg-red-50 text-red-700':'bg-blue-50 text-blue-700'} px-2 py-1 rounded text-xs font-bold">${item.type}</span></td>
+                    <td class="px-6 py-4">
+                        <span class="${item.type==='Goat'?'bg-red-50 text-red-700':'bg-blue-50 text-blue-700'} px-2 py-1 rounded text-xs font-bold">
+                            ${item.type}
+                        </span>
+                    </td>
                     <td class="px-6 py-4">${item.breed}</td>
-                    <td class="px-6 py-4 font-bold">$${item.price}</td>
-                    <td class="px-6 py-4"><span class="bg-gray-900 text-white px-3 py-1 rounded-full text-xs">${item.status}</span></td>
-                    <td class="px-6 py-4 text-right flex justify-end gap-3">
+                    <td class="px-6 py-4 font-bold">${formatINR(item.price)}</td>
+                    <td class="px-6 py-4">
+                        <span class="bg-gray-900 text-white px-3 py-1 rounded-full text-xs">${item.status}</span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
                         <i onclick="deleteLivestock('${item._id}')" data-lucide="trash" class="w-4 h-4 text-gray-500 cursor-pointer hover:text-red-500"></i>
                     </td>
                 </tr>
@@ -348,33 +337,69 @@
 
         function renderOrdersTable() {
             const tbody = document.getElementById('orders-table-body');
-            if(orders.length === 0) {
+            if (orders.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No orders yet</td></tr>';
                 return;
             }
-            tbody.innerHTML = orders.map((o) => `
+            tbody.innerHTML = orders.map(o => `
                 <tr class="hover:bg-gray-50 border-b">
-                    <td class="px-6 py-4 font-medium">#${o._id.substr(-6)}</td>
-                    <td class="px-6 py-4 font-bold">${o.customer}</td>
-                    <td class="px-6 py-4 text-gray-500">${o.date}</td>
-                    <td class="px-6 py-4 font-bold">$${o.total}</td>
-                    <td class="px-6 py-4"><span class="px-3 py-1 rounded-full text-xs font-bold ${o.status === 'Shipped' ? 'bg-blue-100 text-blue-700' : (o.status === 'Delivered' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-800')}">${o.status}</span></td>
+                    <td class="px-6 py-4 font-medium">#${o._id?.substr(-6) || 'N/A'}</td>
+                    <td class="px-6 py-4 font-bold">${o.customer || 'Anonymous'}</td>
+                    <td class="px-6 py-4 text-gray-500">${new Date(o.createdAt).toLocaleDateString('en-IN')}</td>
+                    <td class="px-6 py-4 font-bold">${formatINR(o.total)}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${o.status === 'Shipped' ? 'bg-blue-100 text-blue-700' : (o.status === 'Delivered' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-800')}">
+                            ${o.status || 'Processing'}
+                        </span>
+                    </td>
                     <td class="px-6 py-4 text-right">
-                        <button onclick="nextStatus('${o._id}', '${o.status}')" class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded">Update Status</button>
+                        <button onclick="nextStatus('${o._id}', '${o.status || 'Processing'}')" class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded">Update Status</button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        // --- Logic & API Calls ---
+        function renderCustomersTable() {
+            const tbody = document.getElementById('customers-table-body');
+            tbody.innerHTML = customers.map(u => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 font-bold flex items-center gap-2">
+                        <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs">${u.name.charAt(0)}</div>
+                        ${u.name}
+                    </td>
+                    <td class="px-6 py-4 text-gray-500">${u.email}</td>
+                    <td class="px-6 py-4 text-gray-500">${u.joined}</td>
+                </tr>
+            `).join('');
+        }
+
         async function deleteLivestock(id) {
-            if(confirm("Delete this livestock?")) {
+            if (confirm("Delete this livestock?")) {
                 try {
-                    await fetch(`${API_URL}/livestock/${id}`, { method: 'DELETE' });
-                    loadData(); // Reload data
-                } catch (error) {
+                    await fetch(`${API_URL}/livestock/${id}`, { method: 'DELETE', credentials: 'include' });
+                    loadData();
+                } catch (err) {
                     alert("Error deleting item");
                 }
+            }
+        }
+
+        async function nextStatus(id, currentStatus) {
+            let next = 'Processing';
+            if (currentStatus === 'Processing') next = 'Shipped';
+            else if (currentStatus === 'Shipped') next = 'Delivered';
+            else next = 'Processing';
+
+            try {
+                await fetch(`${API_URL}/orders/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ status: next })
+                });
+                loadData();
+            } catch (err) {
+                alert("Error updating order");
             }
         }
 
@@ -395,39 +420,33 @@
             };
 
             try {
-                await fetch(`${API_URL}/livestock`, {
+                const res = await fetch(`${API_URL}/livestock`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
                     body: JSON.stringify(newItem)
                 });
-                closeAddModal();
-                loadData();
-                document.querySelector('form').reset();
+                if (res.ok) {
+                    closeAddModal();
+                    document.querySelector('form').reset();
+                    loadData();
+                } else {
+                    alert("Failed to add livestock");
+                }
             } catch (error) {
                 alert("Error adding livestock");
             }
         }
 
-        async function nextStatus(id, currentStatus) {
-            let next = 'Processing';
-            if(currentStatus === 'Processing') next = 'Shipped';
-            else if(currentStatus === 'Shipped') next = 'Delivered';
-            else next = 'Processing';
-
-            try {
-                await fetch(`${API_URL}/orders/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: next })
-                });
-                loadData();
-            } catch (error) {
-                alert("Error updating order");
-            }
+        async function logout() {
+            await fetch(`${API_URL}/auth/logout`, { method: 'POST', credentials: 'include' });
+            window.location.href = '/'; // or reload
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadData(); // Load initial data from DB
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+            document.getElementById('current-date').innerText = new Date().toLocaleDateString('en-IN', dateOptions);
+            loadData();
             adminRouter('dashboard');
         });
     </script>
