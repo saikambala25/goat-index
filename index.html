@@ -13,6 +13,7 @@
         .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
         .modal-content { background-color: white; margin: 10% auto; padding: 20px; border-radius: 8px; width: 400px; }
     </style>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 <body class="bg-gray-100 text-gray-900 h-screen flex overflow-hidden">
 
@@ -263,6 +264,12 @@
         let livestock = [];
         let orders = [];
 
+const socket = io('https://goat-user.vercel.app');
+socket.on('orders:update', () => {
+  console.log('🔄 Orders updated');
+  loadData();
+});
+
         // API URL
         const API_URL = 'https://goat-user.vercel.app/api';
 
@@ -274,7 +281,7 @@
                 livestock = await lsRes.json();
                 
                 // Fetch Orders
-                const ordRes = await fetch(`${API_URL}/orders`);
+                const ordRes = await fetch(`${API_URL}/admin/orders`);
                 orders = await ordRes.json();
 
                 // Re-render current view
@@ -432,5 +439,4 @@
         });
     </script>
 </body>
-
 </html>
