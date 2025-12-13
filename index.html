@@ -10,8 +10,8 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         /* Simple Modal */
-        .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-        .modal-content { background-color: white; margin: 10% auto; padding: 20px; border-radius: 8px; width: 400px; }
+        .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background-color: white; padding: 20px; border-radius: 8px; width: 400px; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-900 h-screen flex overflow-hidden">
@@ -84,16 +84,16 @@
                     </div>
                     <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-start justify-between">
                         <div>
-                            <p class="text-sm text-gray-500 font-medium">Available</p>
-                            <h3 class="text-3xl font-bold text-gray-800 mt-2" id="stat-available">0</h3>
+                            <p class="text-sm text-gray-500 font-medium">Total Orders</p>
+                            <h3 class="text-3xl font-bold text-gray-800 mt-2" id="stat-orders">0</h3>
                         </div>
                         <div class="p-3 bg-green-50 text-green-600 rounded-lg">
-                            <i data-lucide="check-circle" class="w-6 h-6"></i>
+                            <i data-lucide="shopping-cart" class="w-6 h-6"></i>
                         </div>
                     </div>
-                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-start justify-between">
+                    <div onclick="openDeliveredOrdersModal()" class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-start justify-between cursor-pointer hover:shadow-lg transition-shadow">
                         <div>
-                            <p class="text-sm text-gray-500 font-medium">Total Revenue (INR)</p>
+                            <p class="text-sm text-gray-500 font-medium">Delivered Revenue (INR)</p>
                             <h3 class="text-3xl font-bold text-gray-800 mt-2" id="stat-revenue">₹0</h3>
                         </div>
                         <div class="p-3 bg-yellow-50 text-yellow-600 rounded-lg">
@@ -206,15 +206,27 @@
         </div>
     </div>
 
+    <div id="delivered-orders-modal" class="modal">
+        <div class="modal-content !w-11/12 max-w-2xl">
+            <h3 class="text-xl font-bold mb-4 text-green-700 flex items-center gap-2">
+                <i data-lucide="check-square" class="w-6 h-6"></i> Successful Deliveries (Delivered)
+            </h3>
+            <p class="text-sm text-gray-500 mb-4">Total revenue is based on the sum of these orders, grouped by customer.</p>
+            <div id="delivered-orders-list" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button type="button" onclick="closeDeliveredOrdersModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let livestock = [];
         let orders = [];
         let customers = [];
         
-        // [STEP 1] Update API URL (User-provided base URL + /api prefix for routes)
         const API_URL = 'https://goat-user.vercel.app/api'; 
 
-        // [STEP 3] Currency formatting helper (Indian Rupee)
         function formatINR(amount) {
             return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
         }
@@ -226,6 +238,18 @@
         function closeAddModal() {
             document.getElementById('add-livestock-modal').style.display = 'none';
         }
+
+        // NEW: Modal functions for Delivered Orders
+        function openDeliveredOrdersModal() {
+            renderDeliveredOrders();
+            document.getElementById('delivered-orders-modal').style.display = 'flex';
+            lucide.createIcons(); // Ensure icons in the modal are rendered
+        }
+
+        function closeDeliveredOrdersModal() {
+            document.getElementById('delivered-orders-modal').style.display = 'none';
+        }
+
 
         // [FIX] Load all data from new Admin API routes (Removed Auth Handling)
         async function loadData() {
@@ -244,9 +268,11 @@
                 
                 // Update dashboard stats
                 document.getElementById('stat-livestock').innerText = livestock.length;
-                document.getElementById('stat-available').innerText = livestock.filter(l => l.status === 'Available').length;
                 
-                // [STEP 3] Change currency to INR for revenue
+                // CHANGED: Stat to Total Orders
+                document.getElementById('stat-orders').innerText = orders.length;
+                
+                // CHANGED: Revenue calculation to ONLY sum Delivered orders
                 const totalRevenue = orders.filter(o => o.status === 'Delivered').reduce((sum, order) => sum + (order.total || 0), 0);
                 document.getElementById('stat-revenue').innerText = formatINR(totalRevenue); 
 
@@ -340,6 +366,54 @@
             lucide.createIcons();
         }
 
+        // NEW: Render delivered orders list grouped by customer
+        function renderDeliveredOrders() {
+            const deliveredOrders = orders.filter(o => o.status === 'Delivered');
+            const listContainer = document.getElementById('delivered-orders-list');
+            
+            if (deliveredOrders.length === 0) {
+                listContainer.innerHTML = '<p class="text-center text-gray-500 p-8 border border-dashed rounded-lg">No successful deliveries found yet.</p>';
+                return;
+            }
+
+            // Group orders by customer name
+            const ordersByCustomer = deliveredOrders.reduce((acc, order) => {
+                const customerName = order.customer || 'Unknown Customer';
+                if (!acc[customerName]) {
+                    acc[customerName] = [];
+                }
+                acc[customerName].push(order);
+                return acc;
+            }, {});
+
+            let html = '';
+            for (const customerName in ordersByCustomer) {
+                const customerOrders = ordersByCustomer[customerName];
+                const customerTotal = customerOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+
+                html += `
+                    <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <div class="flex justify-between items-center pb-2 border-b border-green-100 mb-3">
+                            <h4 class="font-bold text-lg text-gray-800 flex items-center gap-2">
+                                <i data-lucide="user" class="w-4 h-4 text-green-600"></i> ${customerName}
+                            </h4>
+                            <span class="text-xl font-bold text-green-700">${formatINR(customerTotal)}</span>
+                        </div>
+                        <ul class="space-y-2">
+                            ${customerOrders.map(order => `
+                                <li class="flex justify-between text-sm text-gray-600 border-b border-dashed last:border-b-0 py-1">
+                                    <span class="font-medium text-gray-800">Order ID: #${order._id.slice(-4)}</span>
+                                    <span class="text-xs text-gray-500">${order.date}</span>
+                                    <span class="font-medium text-right">${formatINR(order.total)}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            listContainer.innerHTML = html;
+        }
 
         function adminRouter(viewName) {
             const titles = {
