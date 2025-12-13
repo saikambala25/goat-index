@@ -267,10 +267,25 @@
         const API_URL = 'https://goat-user.vercel.app/api';
 
         // --- Fetch Data from API ---
-        async function loadData() {
-            try {
-                // Fetch Livestock
-                const lsRes = await fetch(`${API_URL}/livestock`);
+        
+async function loadData() {
+  try {
+    const lsRes = await fetch(`${API_URL}/livestock`);
+    livestock = await lsRes.json();
+
+    const ordRes = await fetch(`${API_URL}/admin/orders`);
+    if (!ordRes.ok) {
+      orders = [];
+      return;
+    }
+    const data = await ordRes.json();
+    orders = Array.isArray(data) ? data : [];
+  } catch (e) {
+    orders = [];
+    livestock = [];
+  }
+}
+/livestock`);
                 livestock = await lsRes.json();
                 
                 // Fetch Orders
@@ -313,7 +328,7 @@
             document.getElementById('stat-livestock').innerText = livestock.length;
             document.getElementById('stat-available').innerText = livestock.filter(i => i.status === 'Available').length;
             document.getElementById('stat-orders').innerText = orders.length;
-            const revenue = orders.reduce((sum, o) => sum + o.total, 0);
+            const revenue = Array.isArray(orders) ? orders.reduce((s,o)=>s+(Number(o.total)||0),0) : 0 => sum + o.total, 0);
             document.getElementById('stat-revenue').innerText = '$' + revenue.toLocaleString();
 
             document.getElementById('breakdown-goats').innerText = livestock.filter(i => i.type === 'Goat').length;
@@ -346,12 +361,25 @@
             lucide.createIcons();
         }
 
-        function renderOrdersTable() {
-            const tbody = document.getElementById('orders-table-body');
-            if(orders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No orders yet</td></tr>';
-                return;
-            }
+        
+function renderOrdersTable() {
+  const tbody = document.getElementById('orders-table-body');
+  if (!Array.isArray(orders) || orders.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-4 text-center text-gray-400">No orders found</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = orders.map(o => `
+    <tr>
+      <td class="px-6 py-4">${o._id.slice(-6)}</td>
+      <td class="px-6 py-4">${o.customer}</td>
+      <td class="px-6 py-4">${o.date}</td>
+      <td class="px-6 py-4">₹${Number(o.total).toLocaleString('en-IN')}</td>
+      <td class="px-6 py-4">${o.status}</td>
+      <td class="px-6 py-4 text-right">—</td>
+    </tr>
+  `).join('');
+}
+
             tbody.innerHTML = orders.map((o) => `
                 <tr class="hover:bg-gray-50 border-b">
                     <td class="px-6 py-4 font-medium">#${o._id.substr(-6)}</td>
@@ -434,9 +462,3 @@
 </body>
 
 </html>
-<script>
-function startOrderPolling(){
-  if(window.__poller) return;
-  window.__poller = setInterval(()=>{ loadData(); },5000);
-}
-</script>
