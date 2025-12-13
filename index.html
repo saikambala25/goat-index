@@ -473,11 +473,36 @@
                     body: JSON.stringify(newItem)
                 });
                 closeAddModal();
+                document.querySelector('#add-livestock-modal form').reset(); // Reset form
                 await loadData(); // Auto-update
-                document.querySelector('#add-livestock-modal form').reset();
             } catch (error) {
                 console.error("Error adding livestock:", error);
                 alert("Error adding livestock. Check console.");
+            }
+        }
+
+        // [NEW] Implement Remove Livestock (DELETE)
+        async function removeItem(id) {
+            if (!confirm("Are you sure you want to permanently remove this livestock item?")) {
+                return;
+            }
+            try {
+                const res = await fetch(`${API_URL}/admin/livestock/${id}`, {
+                    method: 'DELETE',
+                    // credentials: 'include' removed - no auth needed
+                });
+                if (res.status === 204) {
+                    alert("Livestock removed successfully.");
+                    await loadData(); // Auto-update
+                } else if (res.status === 404) {
+                    alert("Livestock not found.");
+                } else {
+                    const data = await res.json();
+                    alert(`Error removing livestock: ${data.message || 'Server error'}`);
+                }
+            } catch (error) {
+                console.error("Error removing livestock:", error);
+                alert("Error removing livestock. Check console.");
             }
         }
 
