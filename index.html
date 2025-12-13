@@ -227,13 +227,14 @@
             document.getElementById('add-livestock-modal').style.display = 'none';
         }
 
-        // [STEP 4 & 6] Load all data from new Admin API routes
+        // [FIX] Load all data from new Admin API routes (Removed Auth Handling)
         async function loadData() {
             try {
+                // Removed credentials: 'include' as authentication is no longer cookie-based
                 const [livestockRes, ordersRes, usersRes] = await Promise.all([
-                    fetch(`${API_URL}/admin/livestock`, { credentials: 'include' }).then(res => res.json()),
-                    fetch(`${API_URL}/admin/orders`, { credentials: 'include' }).then(res => res.json()),
-                    fetch(`${API_URL}/admin/users`, { credentials: 'include' }).then(res => res.json())
+                    fetch(`${API_URL}/admin/livestock`).then(res => res.json()),
+                    fetch(`${API_URL}/admin/orders`).then(res => res.json()),
+                    fetch(`${API_URL}/admin/users`).then(res => res.json())
                 ]);
 
                 // The server now returns an object with a key (e.g., { livestock: [...] })
@@ -394,7 +395,7 @@
                 await fetch(`${API_URL}/admin/livestock`, { // Using new Admin API
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
+                    // credentials: 'include' removed - no auth needed
                     body: JSON.stringify(newItem)
                 });
                 closeAddModal();
@@ -416,7 +417,7 @@
                 await fetch(`${API_URL}/admin/orders/${id}`, { // Using new Admin API
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
+                    // credentials: 'include' removed - no auth needed
                     body: JSON.stringify({ status: next })
                 });
                 await loadData(); // Auto-update
@@ -432,5 +433,4 @@
         });
     </script>
 </body>
-
 </html>
