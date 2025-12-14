@@ -224,6 +224,8 @@
         let livestock = [];
         let orders = [];
         let customers = [];
+        // NEW: Store the last viewed route for persistence after data reload
+        let lastViewedRoute = 'dashboard'; 
         
         const API_URL = 'https://goat-user.vercel.app/api'; 
 
@@ -239,55 +241,46 @@
             document.getElementById('add-livestock-modal').style.display = 'none';
         }
 
-        // NEW: Modal functions for Delivered Orders
         function openDeliveredOrdersModal() {
             renderDeliveredOrders();
             document.getElementById('delivered-orders-modal').style.display = 'flex';
-            lucide.createIcons(); // Ensure icons in the modal are rendered
+            lucide.createIcons();
         }
 
         function closeDeliveredOrdersModal() {
             document.getElementById('delivered-orders-modal').style.display = 'none';
         }
 
-
-        // [FIX] Load all data from new Admin API routes (Removed Auth Handling)
-        async function loadData() {
+        // FIX: Load data now accepts a callback route to re-render the last active page
+        async function loadData(targetRoute = lastViewedRoute) {
             try {
-                // Removed credentials: 'include' as authentication is no longer cookie-based
                 const [livestockRes, ordersRes, usersRes] = await Promise.all([
                     fetch(`${API_URL}/admin/livestock`).then(res => res.json()),
                     fetch(`${API_URL}/admin/orders`).then(res => res.json()),
                     fetch(`${API_URL}/admin/users`).then(res => res.json())
                 ]);
 
-                // The server now returns an object with a key (e.g., { livestock: [...] })
                 livestock = livestockRes.livestock || [];
                 orders = ordersRes.orders || [];
                 customers = usersRes.users || [];
                 
                 // Update dashboard stats
                 document.getElementById('stat-livestock').innerText = livestock.length;
-                
-                // CHANGED: Stat to Total Orders
                 document.getElementById('stat-orders').innerText = orders.length;
                 
-                // CHANGED: Revenue calculation to ONLY sum Delivered orders
                 const totalRevenue = orders.filter(o => o.status === 'Delivered').reduce((sum, order) => sum + (order.total || 0), 0);
                 document.getElementById('stat-revenue').innerText = formatINR(totalRevenue); 
 
-                // Re-render the active view to show updated data
-                const activeView = document.querySelector('.admin-nav-item.bg-green-600')?.getAttribute('onclick').match(/'(\\w+)'/)?.[1] || 'dashboard';
-                adminRouter(activeView);
+                // FIX: Instead of looking up the active view, use the targetRoute passed or the lastViewedRoute
+                adminRouter(targetRoute);
 
             } catch (error) {
                 console.error("Error loading data:", error);
-                // Simple error handling
                 alert("Failed to load data from server. Check console for details.");
             }
         }
         
-        // [STEP 4] RENDER FUNCTIONS: Load data similar to user app
+        // FIX: RenderLivestock to use Image API
         function renderLivestock() {
             const grid = document.getElementById('livestock-grid');
             if (!grid) return;
@@ -342,7 +335,6 @@
             lucide.createIcons();
         }
 
-        // [STEP 4] Implement renderCustomers
         function renderCustomers() {
             const tableBody = document.getElementById('customers-table-body');
             if (!tableBody) return;
@@ -366,7 +358,6 @@
             lucide.createIcons();
         }
 
-        // NEW: Render delivered orders list grouped by customer
         function renderDeliveredOrders() {
             const deliveredOrders = orders.filter(o => o.status === 'Delivered');
             const listContainer = document.getElementById('delivered-orders-list');
@@ -415,7 +406,9 @@
             listContainer.innerHTML = html;
         }
 
+        // FIX: adminRouter persists the last viewed route
         function adminRouter(viewName) {
+            lastViewedRoute = viewName; // Update last viewed route
             const titles = {
                 'dashboard': 'Dashboard',
                 'livestock': 'Livestock',
@@ -441,12 +434,12 @@
 
             if (viewName === 'livestock') renderLivestock();
             if (viewName === 'orders') renderOrders();
-            if (viewName === 'customers') renderCustomers(); // [STEP 4]
+            if (viewName === 'customers') renderCustomers(); 
             
             lucide.createIcons();
         }
 
-        // [STEP 5 & 7] Updated CUD functions to use new Admin API and auto-update
+        // FIX: addNewLivestock calls loadData with the current view
         async function addNewLivestock() {
             const name = document.getElementById('new-name').value;
             const type = document.getElementById('new-type').value;
@@ -465,7 +458,7 @@
             formData.append('breed', breed);
             formData.append('age', age);
             formData.append('price', price);
-            formData.append('tags', "New Arrival"); // Default tag
+            formData.append('tags', "New Arrival");
             formData.append('status', 'Available');
 
             const imageFile = document.getElementById('new-image').files[0];
@@ -478,15 +471,15 @@
                 });
                 if (!res.ok) throw new Error('Failed to add livestock');
                 closeAddModal();
-                document.querySelector('#add-livestock-modal form').reset(); // Reset form
-                await loadData(); // Auto-update
+                document.querySelector('#add-livestock-modal form').reset();
+                await loadData(lastViewedRoute); // Pass the current view to reload to
             } catch (error) {
                 console.error("Error adding livestock:", error);
                 alert("Error adding livestock. Check console.");
             }
         }
 
-        // [NEW] Implement Remove Livestock (DELETE)
+        // FIX: removeItem calls loadData with the current view
         async function removeItem(id) {
             if (!confirm("Are you sure you want to permanently remove this livestock item?")) {
                 return;
@@ -494,11 +487,10 @@
             try {
                 const res = await fetch(`${API_URL}/admin/livestock/${id}`, {
                     method: 'DELETE',
-                    // credentials: 'include' removed - no auth needed
                 });
                 if (res.status === 204) {
                     alert("Livestock removed successfully.");
-                    await loadData(); // Auto-update
+                    await loadData(lastViewedRoute); // Pass the current view to reload to
                 } else if (res.status === 404) {
                     alert("Livestock not found.");
                 } else {
@@ -511,20 +503,20 @@
             }
         }
 
+        // FIX: nextStatus calls loadData with the current view
         async function nextStatus(id, currentStatus) {
             let next = 'Processing';
             if(currentStatus === 'Processing') next = 'Shipped';
             else if(currentStatus === 'Shipped') next = 'Delivered';
-            else return; // Don't change Delivered/Cancelled status
+            else return; 
 
             try {
-                await fetch(`${API_URL}/admin/orders/${id}`, { // Using new Admin API
+                await fetch(`${API_URL}/admin/orders/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    // credentials: 'include' removed - no auth needed
                     body: JSON.stringify({ status: next })
                 });
-                await loadData(); // Auto-update
+                await loadData(lastViewedRoute); // Pass the current view to reload to
             } catch (error) {
                 console.error("Error updating order:", error);
                 alert("Error updating order. Check console.");
@@ -532,7 +524,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadData(); // Load initial data from DB
+            loadData();
             adminRouter('dashboard');
         });
     </script>
