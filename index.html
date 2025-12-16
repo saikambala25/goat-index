@@ -67,16 +67,13 @@
                 <p class="text-sm text-gray-500 dark:text-gray-400">Tuesday, December 16, 2025</p>
             </div>
             <div class="flex items-center gap-6">
-                <button class="flex items-center gap-2 bg-gray-900 dark:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 dark:hover:bg-gray-600 transition">
-                    <i data-lucide="download" class="w-4 h-4"></i> Report
-                </button>
                 <div class="flex items-center gap-3 border-l border-gray-300 dark:border-gray-600 pl-6">
                     <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">AU</div>
                     <div>
                         <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">Admin User</p>
                         <p class="text-xs text-gray-500 dark:text-gray-400">Super Admin</p>
                     </div>
-                </div> 
+                </div>
                 <button id="theme-toggle" class="relative ml-6 text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition">
                     <i data-lucide="moon" class="w-6 h-6 hidden dark:block"></i>
                     <i data-lucide="sun" class="w-6 h-6 block dark:hidden"></i>
@@ -124,9 +121,15 @@
             <div id="admin-view-livestock" class="hidden space-y-6">
                 <div class="flex justify-between items-center">
                     <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">All Livestock Listings</h2>
-                    <button onclick="openLivestockModal()" class="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700">
-                        <i data-lucide="plus" class="w-4 h-4"></i> Add New
-                    </button>
+                    <div class="flex items-center gap-4">
+                        <div class="relative">
+                            <input type="text" id="livestock-search-input" oninput="searchLivestock()" placeholder="Search by name or breed..." class="w-64 pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-green-500 focus:border-green-500 transition duration-150">
+                            <i data-lucide="search" class="w-5 h-5 text-gray-400 dark:text-gray-500 absolute left-3 top-1/2 transform -translate-y-1/2"></i>
+                        </div>
+                        <button onclick="openLivestockModal()" class="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Add New
+                        </button>
+                    </div>
                 </div>
                 <div id="livestock-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
@@ -341,9 +344,9 @@
         let livestock = [];
         let orders = [];
         let customers = [];
-        let lastViewedRoute = localStorage.getItem('lastViewedRoute') || 'dashboard'; 
+        let lastViewedRoute = localStorage.getItem('lastViewedRoute') || 'dashboard';
         
-        const API_URL = 'https://goat-user.vercel.app/api'; 
+        const API_URL = 'https://goat-user.vercel.app/api';
         
         let seenOrderIds = new Set(JSON.parse(localStorage.getItem('seenOrderIds') || '[]'));
         let seenCancelledIds = new Set(JSON.parse(localStorage.getItem('seenCancelledIds') || '[]'));
@@ -421,7 +424,8 @@
                 document.getElementById('new-age').value = item.age;
                 document.getElementById('new-price').value = item.price;
                 document.getElementById('new-status').value = item.status;
-                document.getElementById('new-tags').value = item.tags;
+                // FIX: Ensure tags input handles null/undefined data gracefully
+                document.getElementById('new-tags').value = item.tags || '';
                 preview.src = `${API_URL}/livestock/image/${item._id}`;
                 preview.classList.remove('hidden');
             } else {
@@ -457,7 +461,7 @@
 
             let itemsHTML = '';
             // Iterate over the items stored in the order object
-            for (const item of order.items || []) { 
+            for (const item of order.items || []) {
                 // Look up the full details from the globally loaded livestock list
                 // Fallback to the item data stored in the order if the livestock item is not found (e.g., deleted)
                 const fullItem = livestock.find(l => l._id === item._id) || item;
@@ -569,7 +573,7 @@
                 document.getElementById('stat-orders').innerText = orders.length;
                 
                 const totalRevenue = orders.filter(o => o.status === 'Delivered').reduce((sum, order) => sum + (order.total || 0), 0);
-                document.getElementById('stat-revenue').innerText = formatINR(totalRevenue); 
+                document.getElementById('stat-revenue').innerText = formatINR(totalRevenue);
                 document.getElementById('settings-revenue').innerText = formatINR(totalRevenue);
 
                 // Remove loading overlay
@@ -586,16 +590,27 @@
             }
         }
         
-        function renderLivestock() {
+        // ADDED: renderLivestock to include search/filter logic
+        function renderLivestock(searchQuery = '') {
             const grid = document.getElementById('livestock-grid');
             if (!grid) return;
             
-            if (livestock.length === 0) {
-                grid.innerHTML = '<div class="col-span-3 text-center text-gray-500 dark:text-gray-400 p-12">No livestock listings found.</div>';
+            const query = searchQuery.toLowerCase().trim();
+            
+            // Filter the livestock based on name, type, or breed
+            const filteredLivestock = livestock.filter(item => 
+                query === '' || 
+                item.name.toLowerCase().includes(query) ||
+                item.type.toLowerCase().includes(query) ||
+                item.breed.toLowerCase().includes(query)
+            );
+
+            if (filteredLivestock.length === 0) {
+                grid.innerHTML = '<div class="col-span-3 text-center text-gray-500 dark:text-gray-400 p-12">No matching livestock listings found.</div>';
                 return;
             }
 
-            grid.innerHTML = livestock.map(item => `
+            grid.innerHTML = filteredLivestock.map(item => `
                 <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm relative">
                     <div class="h-40 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-6xl mb-4">
                         <img src="${API_URL}/livestock/image/${item._id}" alt="${item.name}" class="w-full h-full object-cover rounded-lg" onerror="this.src='https://via.placeholder.com/160'; this.onerror=null;">
@@ -613,6 +628,14 @@
                 </div>
             `).join('');
             lucide.createIcons();
+        }
+        
+        // ADDED: searchLivestock function to connect the search input to the rendering logic
+        function searchLivestock() {
+            const searchInput = document.getElementById('livestock-search-input');
+            if (searchInput) {
+                renderLivestock(searchInput.value);
+            }
         }
         
         function renderOrders(searchQuery = '') {
@@ -641,7 +664,7 @@
                     </td>
                     <td class="px-6 py-4 text-gray-800 dark:text-gray-100">${order.customer}</td>
                     <td class="px-6 py-4 text-gray-800 dark:text-gray-100">${order.date}</td>
-                    <td class="px-6 py-4 font-bold text-green-700 dark:text-green-400">${formatINR(order.total)}</td> 
+                    <td class="px-6 py-4 font-bold text-green-700 dark:text-green-400">${formatINR(order.total)}</td>
                     <td class="px-6 py-4">
                         <span class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-medium ${getStatusColor(order.status)}">
                             ${order.status}
@@ -752,7 +775,7 @@
             lucide.createIcons();
         }
 
-        // MODIFIED: adminRouter to reset search input on every navigation to/from Orders/Customers
+        // MODIFIED: adminRouter to reset search input on every navigation to/from Orders/Customers/Livestock
         function adminRouter(viewName) {
             lastViewedRoute = viewName;
             localStorage.setItem('lastViewedRoute', viewName);
@@ -776,13 +799,17 @@
                 }
             });
 
-            if (viewName === 'livestock') renderLivestock();
+             if (viewName === 'livestock') {
+                 const searchInput = document.getElementById('livestock-search-input');
+                 if (searchInput) searchInput.value = '';
+                 renderLivestock('');
+             }
             
             if (viewName === 'orders') {
                 const searchInput = document.getElementById('order-search-input');
                 // Reset search input and render the full list
-                if (searchInput) searchInput.value = ''; 
-                renderOrders(''); 
+                if (searchInput) searchInput.value = '';
+                renderOrders('');
             }
             
             if (viewName === 'customers') {
@@ -804,7 +831,8 @@
             const age = document.getElementById('new-age').value;
             const price = parseFloat(document.getElementById('new-price').value);
             const status = document.getElementById('new-status').value;
-            const tags = document.getElementById('new-tags').value;
+            // FIX: Trim whitespace and ensure empty string is used if field is cleared.
+            const tags = document.getElementById('new-tags').value.trim();
 
             if (!name || !type || !breed || !age || isNaN(price) || !status) {
                 alert("All required fields must be filled and price must be a number.");
@@ -818,7 +846,7 @@
             formData.append('age', age);
             formData.append('price', price);
             formData.append('status', status);
-            formData.append('tags', tags);
+            formData.append('tags', tags); // This will send an empty string if the field was cleared
 
             const imageFile = document.getElementById('new-image').files[0];
             if (imageFile) formData.append('image', imageFile);
