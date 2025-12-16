@@ -89,8 +89,7 @@
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto p-8">
-            <div id="admin-view-dashboard" class="space-y-6">
+        <div class="flex-1 overflow-y-auto p-8 relative"> <div id="admin-view-dashboard" class="space-y-6 hidden">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-start justify-between">
                         <div>
@@ -171,7 +170,7 @@
                 </div>
             </div>
 
-            <div id="admin-view-settings" class="space-y-6">
+            <div id="admin-view-settings" class="hidden space-y-6">
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-3">
@@ -292,7 +291,7 @@
                 <h3 class="text-xl font-bold text-green-700 dark:text-green-400 flex items-center gap-2">
                     <i data-lucide="bell" class="w-6 h-6"></i> Notifications
                 </h3>
-                <button onclick="clearAllNotifications()" class="text-sm text-red-600 hover:text-red-800">
+                <button onclick="clearAllNotifications()" class="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 font-medium">
                     Clear All
                 </button>
             </div>
@@ -322,7 +321,7 @@
         let orders = [];
         let customers = [];
         // Store the last viewed route for persistence after data reload
-        let lastViewedRoute = 'dashboard'; 
+        let lastViewedRoute = localStorage.getItem('lastViewedRoute') || 'dashboard'; 
         
         const API_URL = 'https://goat-user.vercel.app/api'; 
         
@@ -522,8 +521,28 @@
             return colors[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100';
         }
 
-        // FIX: Load data now accepts a callback route to re-render the last active page
+        // --- FIXED loadData: No more flashing ---
         async function loadData(targetRoute = lastViewedRoute) {
+            // Immediately show the target view (preserves UI on refresh)
+            ['dashboard', 'livestock', 'orders', 'customers', 'settings'].forEach(v => {
+                const el = document.getElementById(`admin-view-${v}`);
+                if (el) el.classList.toggle('hidden', v !== targetRoute);
+            });
+
+            // Add loading overlay
+            const mainContainer = document.querySelector('main .flex-1.overflow-y-auto');
+            if (mainContainer && !document.getElementById('loading-overlay')) {
+                mainContainer.insertAdjacentHTML('afterbegin', `
+                    <div id="loading-overlay" class="absolute inset-0 bg-white/70 dark:bg-gray-900/80 flex items-center justify-center z-40 rounded-b-xl">
+                        <div class="text-center">
+                            <i data-lucide="loader-2" class="w-12 h-12 text-green-600 dark:text-green-400 animate-spin"></i>
+                            <p class="mt-4 text-lg font-medium text-gray-700 dark:text-gray-300">Loading data...</p>
+                        </div>
+                    </div>
+                `);
+                lucide.createIcons();
+            }
+
             try {
                 const [livestockRes, ordersRes, usersRes] = await Promise.all([
                     fetch(`${API_URL}/admin/livestock`).then(res => res.json()),
@@ -542,12 +561,18 @@
                 const totalRevenue = orders.filter(o => o.status === 'Delivered').reduce((sum, order) => sum + (order.total || 0), 0);
                 document.getElementById('stat-revenue').innerText = formatINR(totalRevenue); 
 
-                // FIX: Instead of looking up the active view, use the targetRoute passed or the lastViewedRoute
+                // Remove loading overlay
+                document.getElementById('loading-overlay')?.remove();
+
+                // Now render fresh content
                 adminRouter(targetRoute);
 
             } catch (error) {
                 console.error("Error loading data:", error);
+                document.getElementById('loading-overlay')?.remove();
                 alert("Failed to load data from server. Check console for details.");
+                // Ensure the router runs even on failure to render placeholder content
+                adminRouter(targetRoute); 
             }
         }
         
@@ -691,23 +716,22 @@
 
         function adminRouter(viewName) {
             lastViewedRoute = viewName;
+            localStorage.setItem('lastViewedRoute', viewName);
+            
             const titles = { dashboard: 'Dashboard', livestock: 'Livestock', orders: 'Orders', customers: 'Customers', settings: 'Settings' };
             const titleEl = document.getElementById('admin-page-title');
             if (titleEl) titleEl.innerText = titles[viewName];
 
             ['dashboard', 'livestock', 'orders', 'customers', 'settings'].forEach(v => 
-                document.getElementById(`admin-view-${v}`)?.classList.add('hidden')
+                document.getElementById(`admin-view-${v}`)?.classList.toggle('hidden', v !== viewName)
             );
-            document.getElementById(`admin-view-${viewName}`)?.classList.remove('hidden');
 
             document.querySelectorAll('.admin-nav-item').forEach(btn => {
-                const isNotificationButton = btn.getAttribute('onclick')?.includes('openNotificationModal');
                 const isCurrentView = btn.getAttribute('onclick')?.includes(viewName);
-
                 if (isCurrentView) {
                     btn.classList.add('bg-green-600', 'text-white', 'dark:bg-green-700');
                     btn.classList.remove('text-gray-600', 'hover:bg-green-50', 'hover:text-green-700', 'dark:text-gray-300', 'dark:hover:bg-green-900/30', 'dark:hover:text-green-400');
-                } else if (!isNotificationButton) {
+                } else {
                     btn.classList.remove('bg-green-600', 'text-white', 'dark:bg-green-700');
                     btn.classList.add('text-gray-600', 'hover:bg-green-50', 'hover:text-green-700', 'dark:text-gray-300', 'dark:hover:bg-green-900/30', 'dark:hover:text-green-400');
                 }
@@ -841,8 +865,13 @@
 
         function updateNotificationPreviews() {
             const previewContainer = document.getElementById('settings-notification-preview');
-            const list = document.getElementById('notification-list');
+            const modalList = document.getElementById('notification-list');
+
             const isModalOpen = document.getElementById('notification-modal')?.style.display === 'flex';
+            if (isModalOpen) {
+                // Only mark as read when the modal is opened
+                notifications.forEach(n => n.read = true);
+            }
 
             const renderList = (container, isModal = false) => {
                 if (!container) return;
@@ -861,7 +890,7 @@
                             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${n.time}</p>
                         </div>
                         <button onclick="removeNotification(${i}); updateNotificationPreviews();" 
-                                class="text-gray-400 hover:text-red-600 transition">
+                                class="text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition">
                             <i data-lucide="x" class="w-5 h-5"></i>
                         </button>
                     </div>
@@ -870,14 +899,13 @@
             };
 
             renderList(previewContainer, false);
-            if (isModalOpen) renderList(list, true);
+            renderList(modalList, true);
         }
 
         function openNotificationModal() {
-            notifications.forEach(n => n.read = true);
-            updateNotificationPreviews();
-            updateBell();
+            // Note: Reading logic is now in updateNotificationPreviews, which is called here
             document.getElementById('notification-modal').style.display = 'flex';
+            updateNotificationPreviews();
             lucide.createIcons();
         }
 
@@ -919,8 +947,20 @@
         checkForNewOrders();
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadData();
-            updateNotificationPreviews();
+            // Set current date in header
+            const dateEl = document.querySelector('header p.text-sm');
+            if (dateEl) {
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                dateEl.textContent = new Date().toLocaleDateString('en-US', options);
+            }
+            
+            // Show last viewed route immediately
+            const initialRoute = localStorage.getItem('lastViewedRoute') || 'dashboard';
+            // This ensures the correct view is shown immediately, preventing flashing before data loads
+            document.getElementById(`admin-view-${initialRoute}`)?.classList.remove('hidden');
+
+            // Load data (with loading overlay)
+            loadData(initialRoute);
             
             // Re-run theme initialization to ensure icons are correct after DOM load
             if (savedTheme) {
