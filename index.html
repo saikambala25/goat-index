@@ -22,44 +22,9 @@
         .dark .modal-scroll::-webkit-scrollbar-track { background-color: #1f2937; }
         .modal-scroll::-webkit-scrollbar-thumb { border-radius: 10px; background-color: #c0c0c0; }
         .dark .modal-scroll::-webkit-scrollbar-thumb { background-color: #6b7280; }
-
-        /* Toast Notification Styles (New) */
-        #toast-container {
-            position: fixed;
-            top: 100px;
-            right: 20px;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            max-width: 360px;
-        }
-        .toast {
-            background: white;
-            border-left: 6px solid #10b981;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
-            padding: 16px;
-            display: flex;
-            gap: 12px;
-            animation: slideIn 0.4s ease-out;
-            opacity: 0;
-            transform: translateX(100%);
-            transition: all 0.3s ease;
-        }
-        .dark .toast { background: #1f2937; }
-        .toast.show { opacity: 1; transform: translateX(0); }
-        .toast.success { border-left-color: #10b981; }
-        .toast.cancel { border-left-color: #ef4444; }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(100%); }
-            to { opacity: 1; transform: translateX(0); }
-        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 h-screen flex overflow-hidden transition-colors">
-
-    <div id="toast-container"></div>
 
     <aside class="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-10 hidden md:flex">
         <div class="p-6 flex items-center gap-3">
@@ -99,7 +64,7 @@
         <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-4 flex justify-between items-center z-10 shadow-sm">
             <div>
                 <h1 id="admin-page-title" class="text-2xl font-bold text-gray-800 dark:text-gray-100">Dashboard</h1>
-                <p class="text-sm text-gray-500 dark:text-gray-400" id="current-date">Tuesday, December 16, 2025</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Tuesday, December 16, 2025</p>
             </div>
             <div class="flex items-center gap-6">
                 <div class="flex items-center gap-3 border-l border-gray-300 dark:border-gray-600 pl-6">
@@ -385,7 +350,8 @@
         
         let seenOrderIds = new Set(JSON.parse(localStorage.getItem('seenOrderIds') || '[]'));
         let seenCancelledIds = new Set(JSON.parse(localStorage.getItem('seenCancelledIds') || '[]'));
-        let previousOrders = []; // Used for status comparison and real-time toast (New)
+        let previousOrderIds = new Set(JSON.parse(localStorage.getItem('previousOrderIds') || '[]'));
+        let previousStatuses = new Map(JSON.parse(localStorage.getItem('previousStatuses') || '[]'));
         let notifications = [];
 
         // --- THEME SWITCHING LOGIC ---
@@ -458,7 +424,7 @@
                 document.getElementById('new-age').value = item.age;
                 document.getElementById('new-price').value = item.price;
                 document.getElementById('new-status').value = item.status;
-                // FIX: Ensure tags input handles null/undefined data gracefully (fixes user issue)
+                // FIX: Ensure tags input handles null/undefined data gracefully
                 document.getElementById('new-tags').value = item.tags || '';
                 preview.src = `${API_URL}/livestock/image/${item._id}`;
                 preview.classList.remove('hidden');
@@ -865,8 +831,8 @@
             const age = document.getElementById('new-age').value;
             const price = parseFloat(document.getElementById('new-price').value);
             const status = document.getElementById('new-status').value;
-            // FIX APPLIED: Trim whitespace and ensure empty string is used if field is cleared.
-            const tags = document.getElementById('new-tags').value.trim(); 
+            // FIX: Trim whitespace and ensure empty string is used if field is cleared.
+            const tags = document.getElementById('new-tags').value.trim();
 
             if (!name || !type || !breed || !age || isNaN(price) || !status) {
                 alert("All required fields must be filled and price must be a number.");
@@ -943,47 +909,18 @@
                 alert("Error updating order. Check console.");
             }
         }
-        
-        // --- Real-time Toast Notification Function (New) ---
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            
-            toast.innerHTML = `
-                <div class="flex-shrink-0">
-                    <i data-lucide="${type === 'success' ? 'shopping-cart' : 'alert-circle'}" class="w-6 h-6 ${type === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}"></i>
-                </div>
-                <div class="flex-1">
-                    <p class="font-medium text-gray-900 dark:text-gray-100">${message}</p>
-                </div>
-                <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            `;
-            
-            container.appendChild(toast);
-            lucide.createIcons();
-
-            // Trigger show animation
-            setTimeout(() => toast.classList.add('show'), 100);
-
-            // Auto-remove after 6 seconds
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => toast.remove(), 400);
-            }, 6000);
-        }
 
         // --- Notification Logic ---
         function addNotification(message, orderId, type = 'order') {
             const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             notifications.unshift({ message, time, orderId, type, read: false });
-            if (type === 'order') seenOrderIds.add(orderId);
-            if (type === 'cancel') seenCancelledIds.add(orderId);
-            localStorage.setItem('seenOrderIds', JSON.stringify([...seenOrderIds]));
-            localStorage.setItem('seenCancelledIds', JSON.stringify([...seenCancelledIds]));
+            if (type === 'order') {
+                seenOrderIds.add(orderId);
+                localStorage.setItem('seenOrderIds', JSON.stringify([...seenOrderIds]));
+            } else if (type === 'cancel') {
+                seenCancelledIds.add(orderId);
+                localStorage.setItem('seenCancelledIds', JSON.stringify([...seenCancelledIds]));
+            }
             updateNotificationPreviews();
             updateBell();
         }
@@ -1061,60 +998,59 @@
 
         document.getElementById('bell-btn').onclick = openNotificationModal;
 
-        // --- Enhanced Real-time Order Checking (New) ---
         async function checkForNewOrders() {
             try {
                 const res = await fetch(`${API_URL}/admin/orders`);
                 const data = await res.json();
                 const currentOrders = data.orders || [];
+                
+                const currentOrderIds = new Set(currentOrders.map(o => o._id));
 
-                if (previousOrders.length === 0) {
-                    // First load - just store
-                    previousOrders = currentOrders.map(o => ({ ...o }));
-                    return;
-                }
-
-                // Loop through current orders to find new/changed statuses
                 for (const order of currentOrders) {
-                    const prevOrder = previousOrders.find(p => p._id === order._id);
+                    const id = order._id;
+                    const currentStatus = order.status;
 
-                    if (!prevOrder) {
+                    if (!previousOrderIds.has(id)) {
                         // New order
-                        if (!seenOrderIds.has(order._id)) {
-                            const msg = `New order #${order._id.slice(-6)} from ${order.customer} worth ${formatINR(order.total)}`;
-                            showToast(msg, 'success');
-                            addNotification(msg, order._id, 'order');
+                        if ((currentStatus === 'Pending' || currentStatus === 'Processing') && !seenOrderIds.has(id)) {
+                            addNotification(
+                                `New Order #${id.slice(-6)} from ${order.customer} for ${formatINR(order.total)}`,
+                                id,
+                                'order'
+                            );
                         }
                     } else {
-                        // Status change
-                        if (prevOrder.status !== order.status) {
-                            if (order.status === 'Cancelled' && !seenCancelledIds.has(order._id)) {
-                                const msg = `Order #${order._id.slice(-6)} from ${order.customer} was cancelled`;
-                                showToast(msg, 'cancel');
-                                addNotification(msg, order._id, 'cancel');
-                            } else if (order.status === 'Delivered') {
-                                const msg = `Order #${order._id.slice(-6)} has been delivered! +${formatINR(order.total)} revenue`;
-                                showToast(msg, 'success');
-                                addNotification(msg, order._id, 'order');
+                        // Existing order, check for status change
+                        const prevStatus = previousStatuses.get(id);
+                        if (prevStatus !== currentStatus) {
+                            if (currentStatus === 'Cancelled' && !seenCancelledIds.has(id)) {
+                                addNotification(
+                                    `Order #${id.slice(-6)} from ${order.customer} has been cancelled.`,
+                                    id,
+                                    'cancel'
+                                );
                             }
                         }
                     }
+
+                    previousStatuses.set(id, currentStatus);
                 }
 
-                // Update previous state
-                previousOrders = currentOrders.map(o => ({ ...o }));
+                previousOrderIds = currentOrderIds;
+
+                localStorage.setItem('previousOrderIds', JSON.stringify([...previousOrderIds]));
+                localStorage.setItem('previousStatuses', JSON.stringify([...previousStatuses.entries()]));
 
             } catch (err) {
                 console.error("Error checking orders:", err);
             }
         }
 
-        // Poll every 5 seconds for real-time feel (New)
-        setInterval(checkForNewOrders, 5000);
-        checkForNewOrders(); // Initial check
+        setInterval(checkForNewOrders, 8000);
+        checkForNewOrders();
 
         document.addEventListener('DOMContentLoaded', () => {
-            const dateEl = document.getElementById('current-date');
+            const dateEl = document.querySelector('header p.text-sm');
             if (dateEl) {
                 const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
                 dateEl.textContent = new Date().toLocaleDateString('en-US', options);
