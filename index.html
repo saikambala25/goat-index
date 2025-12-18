@@ -14,28 +14,42 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        
+        /* Modal Styles */
         .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-        .modal-content { padding: 24px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
+        .modal-content { padding: 24px; border-radius: 12px; width: 95%; max-width: 500px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
         .modal-scroll { overflow-y: auto; padding-right: 8px; }
+        
+        /* Custom Scrollbar */
         .modal-scroll::-webkit-scrollbar { width: 6px; }
         .modal-scroll::-webkit-scrollbar-track { border-radius: 10px; background-color: #f1f1f1; }
         .dark .modal-scroll::-webkit-scrollbar-track { background-color: #1f2937; }
         .modal-scroll::-webkit-scrollbar-thumb { border-radius: 10px; background-color: #c0c0c0; }
         .dark .modal-scroll::-webkit-scrollbar-thumb { background-color: #6b7280; }
+
+        /* Mobile Sidebar Transition */
+        #sidebar { transition: transform 0.3s ease-in-out; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 h-screen flex overflow-hidden transition-colors">
 
-    <aside class="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-10 hidden md:flex">
-        <div class="p-6 flex items-center gap-3">
-            <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">L</div>
-            <div>
-                <span class="block text-lg font-bold text-gray-800 dark:text-gray-100 leading-none">LivestockMart</span>
-                <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Admin</span>
+    <div id="mobile-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-20 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
+
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-200 ease-in-out shadow-xl md:shadow-none">
+        <div class="p-6 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">L</div>
+                <div>
+                    <span class="block text-lg font-bold text-gray-800 dark:text-gray-100 leading-none">LivestockMart</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Admin</span>
+                </div>
             </div>
+            <button onclick="toggleSidebar()" class="md:hidden text-gray-500 hover:text-red-500">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
         </div>
 
-        <nav class="flex-1 px-4 space-y-2 mt-4">
+        <nav class="flex-1 px-4 space-y-2 mt-4 overflow-y-auto">
             <button onclick="adminRouter('dashboard')" class="admin-nav-item w-full flex items-center gap-3 px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/30 hover:text-green-700 dark:hover:text-green-400 rounded-lg transition-colors">
                 <i data-lucide="bar-chart-2" class="w-5 h-5"></i> Dashboard
             </button>
@@ -53,41 +67,49 @@
             </button>
         </nav>
 
-        <div class="p-4">
+        <div class="p-4 border-t border-gray-100 dark:border-gray-700">
             <button onclick="alert('Logged Out')" class="w-full flex items-center gap-3 px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg">
                 <i data-lucide="log-out" class="w-5 h-5"></i> Logout
             </button>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col relative overflow-hidden">
-        <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-4 flex justify-between items-center z-10 shadow-sm">
-            <div>
-                <h1 id="admin-page-title" class="text-2xl font-bold text-gray-800 dark:text-gray-100">Dashboard</h1>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Tuesday, December 16, 2025</p>
+    <main class="flex-1 flex flex-col relative overflow-hidden w-full">
+        <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-8 py-4 flex justify-between items-center z-10 shadow-sm sticky top-0">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-600 dark:text-gray-300 hover:text-green-600">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+                
+                <div>
+                    <h1 id="admin-page-title" class="text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-100">Dashboard</h1>
+                    <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Manage your farm efficiently</p>
+                </div>
             </div>
-            <div class="flex items-center gap-6">
-                <div class="flex items-center gap-3 border-l border-gray-300 dark:border-gray-600 pl-6">
-                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">AU</div>
+
+            <div class="flex items-center gap-4 md:gap-6">
+                <div class="hidden md:flex items-center gap-3 border-l border-gray-300 dark:border-gray-600 pl-6">
+                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold shadow-sm">AU</div>
                     <div>
                         <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">Admin User</p>
                         <p class="text-xs text-gray-500 dark:text-gray-400">Super Admin</p>
                     </div>
                 </div>
-                <button id="theme-toggle" class="relative ml-6 text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition">
+                <button id="theme-toggle" class="relative text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition p-1">
                     <i data-lucide="moon" class="w-6 h-6 hidden dark:block"></i>
                     <i data-lucide="sun" class="w-6 h-6 block dark:hidden"></i>
                 </button>
-                <button id="bell-btn" class="relative text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition">
+                <button id="bell-btn" class="relative text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition p-1">
                     <i data-lucide="bell" class="w-6 h-6"></i>
-                    <span id="notification-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+                    <span id="notification-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden shadow-sm border border-white dark:border-gray-800">0</span>
                 </button>
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto p-8 relative">
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 relative">
+            
             <div id="admin-view-dashboard" class="space-y-6 hidden">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                     <div class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-start justify-between">
                         <div>
                             <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Total Livestock</p>
@@ -119,66 +141,70 @@
             </div>
 
             <div id="admin-view-livestock" class="hidden space-y-6">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">All Livestock Listings</h2>
-                    <div class="flex items-center gap-4">
-                        <div class="relative">
-                            <input type="text" id="livestock-search-input" oninput="searchLivestock()" placeholder="Search by name or breed..." class="w-64 pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-green-500 focus:border-green-500 transition duration-150">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">All Livestock</h2>
+                    <div class="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                        <div class="relative w-full md:w-auto">
+                            <input type="text" id="livestock-search-input" oninput="searchLivestock()" placeholder="Search..." class="w-full md:w-64 pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-green-500 focus:border-green-500 transition duration-150">
                             <i data-lucide="search" class="w-5 h-5 text-gray-400 dark:text-gray-500 absolute left-3 top-1/2 transform -translate-y-1/2"></i>
                         </div>
-                        <button onclick="openLivestockModal()" class="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700">
+                        <button onclick="openLivestockModal()" class="w-full sm:w-auto flex justify-center items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition shadow-sm">
                             <i data-lucide="plus" class="w-4 h-4"></i> Add New
                         </button>
                     </div>
                 </div>
-                <div id="livestock-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                <div id="livestock-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
 
             <div id="admin-view-orders" class="hidden space-y-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">All Customer Orders</h2>
-                    <div class="relative">
-                        <input type="text" id="order-search-input" oninput="searchOrders()" placeholder="Search by name or order ID..." class="w-64 pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-green-500 focus:border-green-500 transition duration-150">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">All Orders</h2>
+                    <div class="relative w-full md:w-auto">
+                        <input type="text" id="order-search-input" oninput="searchOrders()" placeholder="Search by name or ID..." class="w-full md:w-64 pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-green-500 focus:border-green-500 transition duration-150">
                         <i data-lucide="search" class="w-5 h-5 text-gray-400 dark:text-gray-500 absolute left-3 top-1/2 transform -translate-y-1/2"></i>
                     </div>
                 </div>
                 <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-                    <table class="w-full text-left">
-                        <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm uppercase">
-                            <tr>
-                                <th class="px-6 py-4 font-medium">ID</th>
-                                <th class="px-6 py-4 font-medium">Customer</th>
-                                <th class="px-6 py-4 font-medium">Date</th>
-                                <th class="px-6 py-4 font-medium">Amount (INR)</th>
-                                <th class="px-6 py-4 font-medium">Status</th>
-                                <th class="px-6 py-4 font-medium text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="orders-table-body" class="divide-y divide-gray-100 dark:divide-gray-700 text-sm"></tbody>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left whitespace-nowrap">
+                            <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm uppercase">
+                                <tr>
+                                    <th class="px-6 py-4 font-medium">ID</th>
+                                    <th class="px-6 py-4 font-medium">Customer</th>
+                                    <th class="px-6 py-4 font-medium">Date</th>
+                                    <th class="px-6 py-4 font-medium">Amount</th>
+                                    <th class="px-6 py-4 font-medium">Status</th>
+                                    <th class="px-6 py-4 font-medium text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-table-body" class="divide-y divide-gray-100 dark:divide-gray-700 text-sm"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <div id="admin-view-customers" class="hidden space-y-6">
-                <div class="flex justify-between items-center mb-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                     <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">All Customers</h2>
-                    <div class="relative">
-                        <input type="text" id="customer-search-input" oninput="searchCustomers()" placeholder="Search by name or email..." class="w-64 pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-green-500 focus:border-green-500 transition duration-150">
+                    <div class="relative w-full md:w-auto">
+                        <input type="text" id="customer-search-input" oninput="searchCustomers()" placeholder="Search by name..." class="w-full md:w-64 pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-green-500 focus:border-green-500 transition duration-150">
                         <i data-lucide="search" class="w-5 h-5 text-gray-400 dark:text-gray-500 absolute left-3 top-1/2 transform -translate-y-1/2"></i>
                     </div>
                 </div>
                 <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-                    <table class="w-full text-left">
-                        <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm uppercase">
-                            <tr>
-                                <th class="px-6 py-4 font-medium">Name</th>
-                                <th class="px-6 py-4 font-medium">Email</th>
-                                <th class="px-6 py-4 font-medium">Role</th>
-                                <th class="px-6 py-4 font-medium">Joined</th>
-                            </tr>
-                        </thead>
-                        <tbody id="customers-table-body" class="divide-y divide-gray-100 dark:divide-gray-700 text-sm"></tbody>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left whitespace-nowrap">
+                            <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm uppercase">
+                                <tr>
+                                    <th class="px-6 py-4 font-medium">Name</th>
+                                    <th class="px-6 py-4 font-medium">Email</th>
+                                    <th class="px-6 py-4 font-medium">Role</th>
+                                    <th class="px-6 py-4 font-medium">Joined</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customers-table-body" class="divide-y divide-gray-100 dark:divide-gray-700 text-sm"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -187,21 +213,20 @@
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-3">
                             <i data-lucide="settings" class="w-8 h-8 text-green-600 dark:text-green-400"></i>
-                            <h3 class="font-bold text-xl text-gray-800 dark:text-gray-100">Admin Settings</h3>
+                            <h3 class="font-bold text-xl text-gray-800 dark:text-gray-100">Settings</h3>
                         </div>
                     </div>
-                    <p class="text-gray-500 dark:text-gray-400 mb-8">Configure user roles, platform fees, and other system parameters.</p>
-
+                    
                     <div class="space-y-6 border-b border-gray-200 dark:border-gray-700 pb-6">
                         <div class="flex justify-between items-center">
                             <div class="flex items-center gap-3">
                                 <i data-lucide="sun-moon" class="w-6 h-6 text-blue-600 dark:text-blue-400"></i>
                                 <div>
-                                    <h4 class="font-medium text-gray-800 dark:text-gray-100">Theme Preference</h4>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">Switch between Light Mode and Dark Mode.</p>
+                                    <h4 class="font-medium text-gray-800 dark:text-gray-100">Theme</h4>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Toggle Light/Dark Mode.</p>
                                 </div>
                             </div>
-                            <button onclick="setTheme(htmlEl.classList.contains('dark') ? 'light' : 'dark')" class="relative text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition">
+                            <button onclick="setTheme(htmlEl.classList.contains('dark') ? 'light' : 'dark')" class="text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition">
                                 <i data-lucide="moon" class="w-6 h-6 hidden dark:block"></i>
                                 <i data-lucide="sun" class="w-6 h-6 block dark:hidden"></i>
                             </button>
@@ -211,14 +236,14 @@
                             <div class="flex items-center gap-3">
                                 <i data-lucide="wallet" class="w-6 h-6 text-yellow-600 dark:text-yellow-400"></i>
                                 <div>
-                                    <h4 class="font-medium text-gray-800 dark:text-gray-100">Delivered Revenue</h4>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">Total revenue from delivered orders.</p>
+                                    <h4 class="font-medium text-gray-800 dark:text-gray-100">Revenue</h4>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Total delivered revenue.</p>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-4">
-                                <span id="settings-revenue" class="text-2xl font-bold text-green-700 dark:text-green-400">₹0</span>
+                            <div class="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-4">
+                                <span id="settings-revenue" class="text-xl sm:text-2xl font-bold text-green-700 dark:text-green-400">₹0</span>
                                 <button onclick="openDeliveredOrdersModal()" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                    View All &rarr;
+                                    View &rarr;
                                 </button>
                             </div>
                         </div>
@@ -243,17 +268,17 @@
     <div id="livestock-modal" class="modal">
         <div class="modal-content bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
             <h3 class="text-lg font-bold mb-4 text-gray-800 dark:text-gray-100">Add New Livestock</h3>
-            <img id="preview-image" src="" class="w-full h-48 object-cover rounded-lg mb-4 hidden">
+            <img id="preview-image" src="" class="w-full h-40 object-cover rounded-lg mb-4 hidden">
             <div class="modal-scroll flex-1">
                 <form onsubmit="event.preventDefault();">
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
-                            <input id="new-name" type="text" required class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                            <input id="new-name" type="text" required class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-green-500 focus:border-green-500">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
-                            <select id="new-type" required class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                            <select id="new-type" required class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-green-500 focus:border-green-500">
                                 <option value="">Select Type</option>
                                 <option value="Goat">Goat</option>
                                 <option value="Sheep">Sheep</option>
@@ -261,39 +286,39 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Breed</label>
-                            <input id="new-breed" type="text" required class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                            <input id="new-breed" type="text" required class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-green-500 focus:border-green-500">
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Age</label>
-                                <input id="new-age" type="text" required class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" placeholder="e.g., 6 months">
+                                <input id="new-age" type="text" required class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-green-500 focus:border-green-500" placeholder="e.g., 6 months">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Price (INR)</label>
-                                <input id="new-price" type="number" required class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" placeholder="e.g., 25000">
+                                <input id="new-price" type="number" required class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-green-500 focus:border-green-500" placeholder="25000">
                             </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                            <select id="new-status" required class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                            <select id="new-status" required class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-green-500 focus:border-green-500">
                                 <option value="Available">Available</option>
                                 <option value="Sold">Sold</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tags (comma separated)</label>
-                            <input id="new-tags" type="text" class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" placeholder="e.g., New Arrival, Premium">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tags</label>
+                            <input id="new-tags" type="text" class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-green-500 focus:border-green-500" placeholder="New, Premium...">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Upload Image</label>
-                            <input id="new-image" type="file" accept="image/*" onchange="previewImage(this)" class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                            <input id="new-image" type="file" accept="image/*" onchange="previewImage(this)" class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-green-500 focus:border-green-500">
                         </div>
                     </div>
                 </form>
             </div>
             <div class="mt-6 flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button type="button" onclick="closeLivestockModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600">Cancel</button>
-                <button id="save-livestock-btn" type="button" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Add Livestock</button>
+                <button type="button" onclick="closeLivestockModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">Cancel</button>
+                <button id="save-livestock-btn" type="button" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">Add</button>
             </div>
         </div>
     </div>
@@ -301,12 +326,12 @@
     <div id="delivered-orders-modal" class="modal">
         <div class="modal-content bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 !w-11/12 max-w-2xl">
             <h3 class="text-xl font-bold mb-4 text-green-700 dark:text-green-400 flex items-center gap-2">
-                <i data-lucide="check-square" class="w-6 h-6"></i> Successful Deliveries (Delivered)
+                <i data-lucide="check-square" class="w-6 h-6"></i> Delivered Orders
             </h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Total revenue is based on the sum of these orders, grouped by customer.</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Revenue breakdown by customer.</p>
             <div id="delivered-orders-list" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2"></div>
             <div class="mt-6 flex justify-end space-x-3">
-                <button type="button" onclick="closeDeliveredOrdersModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600">Close</button>
+                <button type="button" onclick="closeDeliveredOrdersModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">Close</button>
             </div>
         </div>
     </div>
@@ -323,19 +348,19 @@
             </div>
             <div id="notification-list" class="space-y-3 max-h-[60vh] overflow-y-auto pr-2"></div>
             <div class="mt-6 flex justify-end">
-                <button onclick="closeNotificationModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600">Close</button>
+                <button onclick="closeNotificationModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">Close</button>
             </div>
         </div>
     </div>
 
     <div id="order-details-modal" class="modal">
-        <div class="modal-content bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 !w-11/12 max-w-4xl">
-            <h3 class="text-xl font-bold mb-4 text-blue-700 dark:text-blue-400 flex items-center gap-2">
+        <div class="modal-content bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 !w-11/12 max-w-4xl max-h-[85vh]">
+            <h3 class="text-xl font-bold mb-4 text-blue-700 dark:text-blue-400 flex items-center gap-2 sticky top-0 bg-white dark:bg-gray-800 z-10 py-2">
                 <i data-lucide="file-text" class="w-6 h-6"></i> Order Details
             </h3>
-            <div id="order-details-content" class="modal-scroll max-h-[65vh] space-y-6"></div>
-            <div class="mt-6 flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button type="button" onclick="closeOrderDetailsModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600">Close</button>
+            <div id="order-details-content" class="modal-scroll space-y-6 flex-1"></div>
+            <div class="mt-4 flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white dark:bg-gray-800 z-10">
+                <button type="button" onclick="closeOrderDetailsModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">Close</button>
             </div>
         </div>
     </div>
@@ -353,6 +378,22 @@
         let previousOrderIds = new Set(JSON.parse(localStorage.getItem('previousOrderIds') || '[]'));
         let previousStatuses = new Map(JSON.parse(localStorage.getItem('previousStatuses') || '[]'));
         let notifications = [];
+
+        // --- Sidebar Logic ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                // Open sidebar
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                // Close sidebar
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
 
         // --- THEME SWITCHING LOGIC ---
         const htmlEl = document.documentElement;
@@ -414,7 +455,7 @@
             const preview = document.getElementById('preview-image');
 
             title.innerText = isEdit ? 'Edit Livestock' : 'Add New Livestock';
-            btn.innerText = isEdit ? 'Update Livestock' : 'Add Livestock';
+            btn.innerText = isEdit ? 'Update' : 'Add';
             btn.onclick = () => saveLivestock(isEdit, id);
 
             if (isEdit && item) {
@@ -424,7 +465,6 @@
                 document.getElementById('new-age').value = item.age;
                 document.getElementById('new-price').value = item.price;
                 document.getElementById('new-status').value = item.status;
-                // FIX: Ensure tags input handles null/undefined data gracefully
                 document.getElementById('new-tags').value = item.tags || '';
                 preview.src = `${API_URL}/livestock/image/${item._id}`;
                 preview.classList.remove('hidden');
@@ -456,19 +496,16 @@
 
             const content = document.getElementById('order-details-content');
             
-            // Immediately open modal and show item details structure
             document.getElementById('order-details-modal').style.display = 'flex';
 
             let itemsHTML = '';
-            // Iterate over the items stored in the order object
             for (const item of order.items || []) {
-                // Look up the full details from the globally loaded livestock list
-                // Fallback to the item data stored in the order if the livestock item is not found (e.g., deleted)
                 const fullItem = livestock.find(l => l._id === item._id) || item;
 
+                // Responsive item card
                 itemsHTML += `
-                    <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl border border-gray-200 dark:border-gray-600 flex gap-4">
-                        <div class="w-32 h-32 bg-gray-200 rounded-lg flex-shrink-0">
+                    <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl border border-gray-200 dark:border-gray-600 flex flex-col sm:flex-row gap-4">
+                        <div class="w-full sm:w-32 h-32 bg-gray-200 rounded-lg flex-shrink-0">
                             <img src="${API_URL}/livestock/image/${item._id}" 
                                 alt="${fullItem.name || 'Unknown'}" 
                                 class="w-full h-full object-cover rounded-lg"
@@ -476,9 +513,11 @@
                         </div>
                         <div class="flex-1">
                             <h4 class="font-bold text-lg text-gray-800 dark:text-gray-100">${fullItem.name || 'Unknown'}</h4>
-                            <p class="text-sm text-gray-600 dark:text-gray-300">Type: ${fullItem.type || 'N/A'}</p>
-                            <p class="text-sm text-gray-600 dark:text-gray-300">Breed: ${fullItem.breed || 'N/A'}</p>
-                            <p class="text-sm text-gray-600 dark:text-gray-300">Age: ${fullItem.age || 'N/A'}</p>
+                            <div class="grid grid-cols-2 sm:block gap-y-1 mt-1">
+                                <p class="text-sm text-gray-600 dark:text-gray-300">Type: ${fullItem.type || 'N/A'}</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-300">Breed: ${fullItem.breed || 'N/A'}</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-300">Age: ${fullItem.age || 'N/A'}</p>
+                            </div>
                             <p class="text-xl font-bold text-green-700 dark:text-green-400 mt-2">${formatINR(fullItem.price || item.price)}</p>
                         </div>
                     </div>
@@ -488,7 +527,7 @@
             content.innerHTML = `
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-3">
-                        <div><p class="text-sm font-medium text-gray-500 dark:text-gray-400">Order ID</p><p class="font-bold text-gray-800 dark:text-gray-100">#${order._id.slice(-6)}</p></div>
+                        <div><p class="text-sm font-medium text-gray-500 dark:text-gray-400">Order ID</p><p class="font-bold text-gray-800 dark:text-gray-100 break-all">#${order._id}</p></div>
                         <div><p class="text-sm font-medium text-gray-500 dark:text-gray-400">Date</p><p class="font-bold text-gray-800 dark:text-gray-100">${order.date}</p></div>
                         <div><p class="text-sm font-medium text-gray-500 dark:text-gray-400">Customer</p><p class="font-bold text-gray-800 dark:text-gray-100">${order.customer}</p></div>
                         <div><p class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</p>
@@ -535,22 +574,19 @@
             return colors[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100';
         }
 
-        // --- FIXED loadData: No more flashing ---
         async function loadData(targetRoute = lastViewedRoute) {
-            // Immediately show the target view (preserves UI on refresh)
             ['dashboard', 'livestock', 'orders', 'customers', 'settings'].forEach(v => {
                 const el = document.getElementById(`admin-view-${v}`);
                 if (el) el.classList.toggle('hidden', v !== targetRoute);
             });
 
-            // Add loading overlay
             const mainContainer = document.querySelector('main .flex-1.overflow-y-auto');
             if (mainContainer && !document.getElementById('loading-overlay')) {
                 mainContainer.insertAdjacentHTML('afterbegin', `
                     <div id="loading-overlay" class="absolute inset-0 bg-white/70 dark:bg-gray-900/80 flex items-center justify-center z-40 rounded-b-xl">
                         <div class="text-center">
                             <i data-lucide="loader-2" class="w-12 h-12 text-green-600 dark:text-green-400 animate-spin"></i>
-                            <p class="mt-4 text-lg font-medium text-gray-700 dark:text-gray-300">Loading data...</p>
+                            <p class="mt-4 text-lg font-medium text-gray-700 dark:text-gray-300">Loading...</p>
                         </div>
                     </div>
                 `);
@@ -568,7 +604,6 @@
                 orders = ordersRes.orders || [];
                 customers = usersRes.users || [];
                 
-                // Update dashboard stats
                 document.getElementById('stat-livestock').innerText = livestock.length;
                 document.getElementById('stat-orders').innerText = orders.length;
                 
@@ -576,28 +611,22 @@
                 document.getElementById('stat-revenue').innerText = formatINR(totalRevenue);
                 document.getElementById('settings-revenue').innerText = formatINR(totalRevenue);
 
-                // Remove loading overlay
                 document.getElementById('loading-overlay')?.remove();
-
-                // Now render fresh content
                 adminRouter(targetRoute);
 
             } catch (error) {
                 console.error("Error loading data:", error);
                 document.getElementById('loading-overlay')?.remove();
-                alert("Failed to load data from server. Check console for details.");
+                // alert("Failed to load data.");
                 adminRouter(targetRoute);
             }
         }
         
-        // ADDED: renderLivestock to include search/filter logic
         function renderLivestock(searchQuery = '') {
             const grid = document.getElementById('livestock-grid');
             if (!grid) return;
             
             const query = searchQuery.toLowerCase().trim();
-            
-            // Filter the livestock based on name, type, or breed
             const filteredLivestock = livestock.filter(item => 
                 query === '' || 
                 item.name.toLowerCase().includes(query) ||
@@ -606,23 +635,27 @@
             );
 
             if (filteredLivestock.length === 0) {
-                grid.innerHTML = '<div class="col-span-3 text-center text-gray-500 dark:text-gray-400 p-12">No matching livestock listings found.</div>';
+                grid.innerHTML = '<div class="col-span-full text-center text-gray-500 dark:text-gray-400 p-12">No matching livestock found.</div>';
                 return;
             }
 
             grid.innerHTML = filteredLivestock.map(item => `
-                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm relative">
-                    <div class="h-40 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-6xl mb-4">
-                        <img src="${API_URL}/livestock/image/${item._id}" alt="${item.name}" class="w-full h-full object-cover rounded-lg" onerror="this.src='https://via.placeholder.com/160'; this.onerror=null;">
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm relative group">
+                    <div class="h-40 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-6xl mb-4 overflow-hidden">
+                        <img src="${API_URL}/livestock/image/${item._id}" alt="${item.name}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" onerror="this.src='https://via.placeholder.com/160?text=No+Image'; this.onerror=null;">
                     </div>
-                    <h3 class="font-bold text-lg text-gray-800 dark:text-gray-100">${item.name}</h3>
+                    <h3 class="font-bold text-lg text-gray-800 dark:text-gray-100 truncate">${item.name}</h3>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${item.breed} • ${item.age}</p>
-                    <span class="absolute top-4 right-4 bg-yellow-500/10 text-yellow-700 text-xs px-2 py-1 rounded-full font-medium">${item.status}</span>
+                    <span class="absolute top-4 right-4 bg-yellow-500/10 text-yellow-700 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">${item.status}</span>
                     <div class="flex items-center justify-between mt-4">
                         <span class="text-xl font-bold text-green-700 dark:text-green-400">${formatINR(item.price)}</span>
                         <div class="flex gap-2">
-                            <button onclick="openLivestockModal(true, '${item._id}')" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-600 transition">Edit</button>
-                            <button onclick="removeItem('${item._id}')" class="bg-red-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-red-600 transition">Remove</button>
+                            <button onclick="openLivestockModal(true, '${item._id}')" class="bg-blue-500 text-white p-2 rounded-lg text-sm hover:bg-blue-600 transition shadow-sm" title="Edit">
+                                <i data-lucide="edit-2" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="removeItem('${item._id}')" class="bg-red-500 text-white p-2 rounded-lg text-sm hover:bg-red-600 transition shadow-sm" title="Remove">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -630,12 +663,9 @@
             lucide.createIcons();
         }
         
-        // ADDED: searchLivestock function to connect the search input to the rendering logic
         function searchLivestock() {
             const searchInput = document.getElementById('livestock-search-input');
-            if (searchInput) {
-                renderLivestock(searchInput.value);
-            }
+            if (searchInput) renderLivestock(searchInput.value);
         }
         
         function renderOrders(searchQuery = '') {
@@ -643,8 +673,6 @@
             if (!tableBody) return;
 
             const query = searchQuery.toLowerCase().trim();
-            
-            // Filter the orders based on customer name OR order ID (last 6 chars)
             const filteredOrders = orders.filter(order => 
                 query === '' || 
                 order.customer.toLowerCase().includes(query) ||
@@ -657,13 +685,13 @@
             }
 
             tableBody.innerHTML = filteredOrders.map(order => `
-                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                     <td class="px-6 py-4">
-                        <span class="font-bold text-gray-800 dark:text-gray-100">${order._id.slice(-6)}</span><br>
-                        <a onclick="openOrderDetailsModal('${order._id}')" class="text-xs text-blue-600 hover:underline cursor-pointer">Click to see details</a>
+                        <span class="font-bold text-gray-800 dark:text-gray-100">#${order._id.slice(-6)}</span><br>
+                        <button onclick="openOrderDetailsModal('${order._id}')" class="text-xs text-blue-600 hover:underline">View Details</button>
                     </td>
                     <td class="px-6 py-4 text-gray-800 dark:text-gray-100">${order.customer}</td>
-                    <td class="px-6 py-4 text-gray-800 dark:text-gray-100">${order.date}</td>
+                    <td class="px-6 py-4 text-gray-800 dark:text-gray-100">${new Date(order.date).toLocaleDateString()}</td>
                     <td class="px-6 py-4 font-bold text-green-700 dark:text-green-400">${formatINR(order.total)}</td>
                     <td class="px-6 py-4">
                         <span class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-medium ${getStatusColor(order.status)}">
@@ -671,8 +699,8 @@
                         </span>
                     </td>
                     <td class="px-6 py-4 text-right">
-                        <button onclick="nextStatus('${order._id}', '${order.status}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium disabled:text-gray-400" ${order.status === 'Delivered' || order.status === 'Cancelled' ? 'disabled' : ''}>
-                            ${order.status === 'Delivered' ? 'Completed' : order.status === 'Cancelled' ? 'Cancelled' : 'Next Status'}
+                        <button onclick="nextStatus('${order._id}', '${order.status}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium disabled:text-gray-400 disabled:cursor-not-allowed whitespace-nowrap" ${order.status === 'Delivered' || order.status === 'Cancelled' ? 'disabled' : ''}>
+                            ${order.status === 'Delivered' ? 'Completed' : order.status === 'Cancelled' ? 'Cancelled' : 'Next Step &rarr;'}
                         </button>
                     </td>
                 </tr>
@@ -682,9 +710,7 @@
 
         function searchOrders() {
             const searchInput = document.getElementById('order-search-input');
-            if (searchInput) {
-                renderOrders(searchInput.value);
-            }
+            if (searchInput) renderOrders(searchInput.value);
         }
 
         function renderCustomers(searchQuery = '') {
@@ -692,8 +718,6 @@
             if (!tableBody) return;
             
             const query = searchQuery.toLowerCase().trim();
-
-            // Filter the customers based on the name or email
             const filteredCustomers = customers.filter(user => 
                 query === '' || 
                 user.name.toLowerCase().includes(query) || 
@@ -706,12 +730,12 @@
             }
 
             tableBody.innerHTML = filteredCustomers.map(user => `
-                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                     <td class="px-6 py-4 font-bold flex items-center gap-2 text-gray-800 dark:text-gray-100">
-                        <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-semibold">
+                        <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0">
                             ${user.name.charAt(0).toUpperCase()}
                         </div>
-                        ${user.name}
+                        <span class="truncate max-w-[120px] md:max-w-none">${user.name}</span>
                     </td>
                     <td class="px-6 py-4 text-gray-800 dark:text-gray-100">${user.email}</td>
                     <td class="px-6 py-4 text-gray-500 dark:text-gray-400">Customer</td>
@@ -723,11 +747,8 @@
 
         function searchCustomers() {
             const searchInput = document.getElementById('customer-search-input');
-            if (searchInput) {
-                renderCustomers(searchInput.value);
-            }
+            if (searchInput) renderCustomers(searchInput.value);
         }
-
 
         function renderDeliveredOrders() {
             const deliveredOrders = orders.filter(o => o.status === 'Delivered');
@@ -761,8 +782,8 @@
                         <ul class="space-y-2">
                             ${customerOrders.map(order => `
                                 <li class="flex justify-between text-sm text-gray-600 dark:text-gray-300 border-b border-dashed dark:border-gray-700 last:border-b-0 py-1">
-                                    <span class="font-medium text-gray-800 dark:text-gray-100">Order ID: #${order._id.slice(-6)}</span>
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">${order.date}</span>
+                                    <span class="font-medium text-gray-800 dark:text-gray-100">#${order._id.slice(-6)}</span>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">${new Date(order.date).toLocaleDateString()}</span>
                                     <span class="font-medium text-right text-gray-800 dark:text-gray-100">${formatINR(order.total)}</span>
                                 </li>
                             `).join('')}
@@ -775,7 +796,6 @@
             lucide.createIcons();
         }
 
-        // MODIFIED: adminRouter to reset search input on every navigation to/from Orders/Customers/Livestock
         function adminRouter(viewName) {
             lastViewedRoute = viewName;
             localStorage.setItem('lastViewedRoute', viewName);
@@ -787,6 +807,14 @@
             ['dashboard', 'livestock', 'orders', 'customers', 'settings'].forEach(v => 
                 document.getElementById(`admin-view-${v}`)?.classList.toggle('hidden', v !== viewName)
             );
+
+            // Auto-close sidebar on mobile when navigating
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            if (window.innerWidth < 768 && !sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
 
             document.querySelectorAll('.admin-nav-item').forEach(btn => {
                 const isCurrentView = btn.getAttribute('onclick')?.includes(viewName);
@@ -807,14 +835,12 @@
             
             if (viewName === 'orders') {
                 const searchInput = document.getElementById('order-search-input');
-                // Reset search input and render the full list
                 if (searchInput) searchInput.value = '';
                 renderOrders('');
             }
             
             if (viewName === 'customers') {
                 const searchInput = document.getElementById('customer-search-input');
-                 // Reset search input and render the full list
                 if (searchInput) searchInput.value = '';
                 renderCustomers('');
             }
@@ -831,7 +857,6 @@
             const age = document.getElementById('new-age').value;
             const price = parseFloat(document.getElementById('new-price').value);
             const status = document.getElementById('new-status').value;
-            // FIX: Trim whitespace and ensure empty string is used if field is cleared.
             const tags = document.getElementById('new-tags').value.trim();
 
             if (!name || !type || !breed || !age || isNaN(price) || !status) {
@@ -846,7 +871,7 @@
             formData.append('age', age);
             formData.append('price', price);
             formData.append('status', status);
-            formData.append('tags', tags); // This will send an empty string if the field was cleared
+            formData.append('tags', tags);
 
             const imageFile = document.getElementById('new-image').files[0];
             if (imageFile) formData.append('image', imageFile);
@@ -854,10 +879,7 @@
             try {
                 const url = `${API_URL}/admin/livestock${isEdit ? `/${id}` : ''}`;
                 const method = isEdit ? 'PUT' : 'POST';
-                const res = await fetch(url, {
-                    method,
-                    body: formData
-                });
+                const res = await fetch(url, { method, body: formData });
                 if (!res.ok) throw new Error(`Failed to ${isEdit ? 'update' : 'add'} livestock`);
                 closeLivestockModal();
                 document.querySelector('#livestock-modal form').reset();
@@ -869,13 +891,9 @@
         }
 
         async function removeItem(id) {
-            if (!confirm("Are you sure you want to permanently remove this livestock item?")) {
-                return;
-            }
+            if (!confirm("Are you sure you want to permanently remove this item?")) return;
             try {
-                const res = await fetch(`${API_URL}/admin/livestock/${id}`, {
-                    method: 'DELETE',
-                });
+                const res = await fetch(`${API_URL}/admin/livestock/${id}`, { method: 'DELETE' });
                 if (res.status === 204) {
                     alert("Livestock removed successfully.");
                     await loadData(lastViewedRoute);
@@ -883,11 +901,11 @@
                     alert("Livestock not found.");
                 } else {
                     const data = await res.json();
-                    alert(`Error removing livestock: ${data.message || 'Server error'}`);
+                    alert(`Error: ${data.message || 'Server error'}`);
                 }
             } catch (error) {
                 console.error("Error removing livestock:", error);
-                alert("Error removing livestock. Check console.");
+                alert("Error removing livestock.");
             }
         }
 
@@ -906,7 +924,7 @@
                 await loadData(lastViewedRoute);
             } catch (error) {
                 console.error("Error updating order:", error);
-                alert("Error updating order. Check console.");
+                alert("Error updating order.");
             }
         }
 
@@ -932,7 +950,7 @@
         }
 
         function clearAllNotifications() {
-            if (confirm("Are you sure you want to clear all notifications?")) {
+            if (confirm("Clear all notifications?")) {
                 notifications = [];
                 updateNotificationPreviews();
                 const list = document.getElementById('notification-list');
@@ -953,20 +971,15 @@
             const modalList = document.getElementById('notification-list');
 
             const isModalOpen = document.getElementById('notification-modal')?.style.display === 'flex';
-            if (isModalOpen) {
-                notifications.forEach(n => n.read = true);
-            }
+            if (isModalOpen) notifications.forEach(n => n.read = true);
 
             const renderList = (container, isModal = false) => {
                 if (!container) return;
-
                 if (notifications.length === 0) {
                     container.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400 py-8">${isModal ? 'No notifications' : 'No new notifications'}</p>`;
                     return;
                 }
-
                 const displayNotifications = isModal ? notifications : notifications.slice(0, 5);
-
                 container.innerHTML = displayNotifications.map((n, i) => `
                     <div class="p-3 rounded-lg ${n.read ? 'bg-gray-50 dark:bg-gray-700/50' : 'bg-green-50 dark:bg-green-900/30 border-l-4 border-green-600 dark:border-green-400'} flex justify-between items-start gap-3">
                         <div class="flex-1">
@@ -1003,7 +1016,6 @@
                 const res = await fetch(`${API_URL}/admin/orders`);
                 const data = await res.json();
                 const currentOrders = data.orders || [];
-                
                 const currentOrderIds = new Set(currentOrders.map(o => o._id));
 
                 for (const order of currentOrders) {
@@ -1011,36 +1023,20 @@
                     const currentStatus = order.status;
 
                     if (!previousOrderIds.has(id)) {
-                        // New order
                         if ((currentStatus === 'Pending' || currentStatus === 'Processing') && !seenOrderIds.has(id)) {
-                            addNotification(
-                                `New Order #${id.slice(-6)} from ${order.customer} for ${formatINR(order.total)}`,
-                                id,
-                                'order'
-                            );
+                            addNotification(`New Order #${id.slice(-6)}: ${formatINR(order.total)}`, id, 'order');
                         }
                     } else {
-                        // Existing order, check for status change
                         const prevStatus = previousStatuses.get(id);
-                        if (prevStatus !== currentStatus) {
-                            if (currentStatus === 'Cancelled' && !seenCancelledIds.has(id)) {
-                                addNotification(
-                                    `Order #${id.slice(-6)} from ${order.customer} has been cancelled.`,
-                                    id,
-                                    'cancel'
-                                );
-                            }
+                        if (prevStatus !== currentStatus && currentStatus === 'Cancelled' && !seenCancelledIds.has(id)) {
+                            addNotification(`Order #${id.slice(-6)} Cancelled`, id, 'cancel');
                         }
                     }
-
                     previousStatuses.set(id, currentStatus);
                 }
-
                 previousOrderIds = currentOrderIds;
-
                 localStorage.setItem('previousOrderIds', JSON.stringify([...previousOrderIds]));
                 localStorage.setItem('previousStatuses', JSON.stringify([...previousStatuses.entries()]));
-
             } catch (err) {
                 console.error("Error checking orders:", err);
             }
@@ -1050,15 +1046,8 @@
         checkForNewOrders();
 
         document.addEventListener('DOMContentLoaded', () => {
-            const dateEl = document.querySelector('header p.text-sm');
-            if (dateEl) {
-                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-                dateEl.textContent = new Date().toLocaleDateString('en-US', options);
-            }
-            
             const initialRoute = localStorage.getItem('lastViewedRoute') || 'dashboard';
             document.getElementById(`admin-view-${initialRoute}`)?.classList.remove('hidden');
-
             loadData(initialRoute);
         });
     </script>
