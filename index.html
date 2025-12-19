@@ -781,10 +781,12 @@
             }
 
             try {
+                // FIXED: Safely fetch data. If an endpoint fails (returns not OK), fallback to an empty array object.
+                // This prevents SyntaxError when a 404 HTML page is returned instead of JSON.
                 const [livestockRes, ordersRes, usersRes] = await Promise.all([
-                    fetch(`${API_URL}/admin/livestock`).then(res => res.json()),
-                    fetch(`${API_URL}/admin/orders`).then(res => res.json()),
-                    fetch(`${API_URL}/admin/users`).then(res => res.json())
+                    fetch(`${API_URL}/admin/livestock`).then(res => res.ok ? res.json() : { livestock: [] }),
+                    fetch(`${API_URL}/admin/orders`).then(res => res.ok ? res.json() : { orders: [] }),
+                    fetch(`${API_URL}/admin/users`).then(res => res.ok ? res.json() : { users: [] })
                 ]);
 
                 livestock = livestockRes.livestock || [];
